@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Checkbox,Table,Typography, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import Navbar from '../components/Navbar';
-import { getCookie,setCookie} from 'cookies-next';
+import { getCookie } from 'cookies-next';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Loader } from 'rsuite';
@@ -16,95 +16,42 @@ interface Stock {
 }
 
 function Watchlist() {
-   let retry=0;
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
      
- 
-  const token = getCookie('access');
+  const token = getCookie('token');
 
-   useEffect(() => {
-    const checkToken = async () => {
-      try {
-        const response = await fetch('https://backend-klm7.onrender.com/api/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token:token }),
-        });
-
-        if (response.ok) {
-          fetchStocksData();
-          setLoading(false);
-        } else {
-          router.replace('/');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
+  useEffect(() => {
     if (!token) {
-      router.replace('/');
+     window.location.href="/";
     } else {
-      checkToken();
+      setLoading(false); 
+      fetchStocksData();
     }
-  }, [token, router]);
+  }, [token]);
 
 
- const handleTokenRefresh = async () => {
-        const refreshToken = getCookie('refresh');
-        try {
-            const response = await fetch('https://backend-klm7.onrender.com/api/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${refreshToken}`
-                },
-                body: JSON.stringify({ refresh: refreshToken })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setCookie('access_token', data.access, { expires: new Date(Date.now() + data.access_expiry * 1000) });
-            } else {
-                router.replace("/");
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            router.replace("/");
-        }
-    };
-    
   const fetchStocksData = async () => {
     try {
-      const res = await fetch("https://backend-klm7.onrender.com/api/stocks", {
+      const res = await fetch("http://localhost:8000/api/stocks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
         },
-      
+        body: JSON.stringify({ token: getCookie('token') }),
       });
 
       if (res.status === 200) {
         const data = await res.json();
         setStocks(data.stocks);
-        retry=0;
-        }else if (res.status === 401 && retry<2) {
-        retry++;
-        await handleTokenRefresh(); // Trigger token refresh
-        await fetchStocksData();
- 
       } else {
-        toast.error('Cannot fetch stocks');
-         retry=0;
+        const data = await res.json();
+        const msg=data.message;
+        toast.error(msg);
       }
-     }catch (error) {
+    } catch (error) {
       console.error('Error:', error);
-      retry=0;
     }
   };
 
@@ -135,31 +82,25 @@ function Watchlist() {
   const handleDeleteStock = async (stocks:Object) => {
     try {
       
-      const res = await fetch("https://backend-klm7.onrender.com/api/delete", {
+      const res = await fetch("http://localhost:8000/api/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ stocks: stocks }),
+        body: JSON.stringify({ token: getCookie('token'), stocks: stocks }),
       });
 
       if (res.status === 200) {
         // Update stocks after successful deletion
         fetchStocksData();
-        retry=0;
         toast.success('Stock deleted successfully');
-      }else if (res.status === 401 && retry<2) {
-        retry++;
-        await handleTokenRefresh(); // Trigger token refresh
-        await handleDeleteStock(selectedStocks)
-        }else {
-        toast.error('Unable to delete stock');
-        retry=0;
+      } else {
+         const data = await res.json();
+        const msg=data.message;
+        toast.error(msg);
       }
     } catch (error) {
       console.error('Error:', error);
-      retry=0;
     }
 
     
