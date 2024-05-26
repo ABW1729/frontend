@@ -112,7 +112,7 @@ const StocksTable= () => {
         toast.success('Stocks added successfully');
       } else {
         const data=await response.json();
-        const msg=response.message;
+        const msg=data.message;
         toast.error(msg);
       }
     } catch (error) {
