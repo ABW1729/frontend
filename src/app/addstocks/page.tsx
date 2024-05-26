@@ -1,21 +1,23 @@
 "use client"
-import React, { useState, useEffect } from 'react';
-import { Button, Table, TableBody, TableCell, Typography, TableContainer, TableHead, TableRow, Paper, Checkbox } from '@mui/material';
+
+import React, { useState ,useEffect} from 'react';
+import { Button,Table, TableBody, TableCell,Typography, TableContainer, TableHead, TableRow, Paper, Checkbox } from '@mui/material';
 import Navbar from '../components/Navbar';
+import { getCookie } from 'cookies-next';
 import { ToastContainer, toast } from "react-toastify";
 import { useRouter } from 'next/navigation';
 import "react-toastify/dist/ReactToastify.css";
-import './loader.css';
-import { getCookie, setCookie } from 'cookies-next'; // Import functions to set and get cookies
-
+import './loader.css'
 interface Stock {
   name: string;
   symbol: string;
 }
 
 
+
+
 const StocksTable= () => {
-  let retry=0;
+
     const stocks = [
         { id: 1, name: 'Apple Inc.', symbol: 'AAPL' },
         { id: 2, name: 'Alphabet Inc.', symbol: 'GOOGL' },
@@ -48,97 +50,21 @@ const StocksTable= () => {
         { id: 29, name: 'Chevron Corporation', symbol: 'CVX' },
         { id: 30, name: 'PepsiCo Inc.', symbol: 'PEP' },
     ];
-    
-     const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
+
+    const [loading, setLoading] = useState(true);
+
+     
   const router = useRouter();
-  const token = getCookie('access');
+  const token = getCookie('token');
 
   useEffect(() => {
-    const checkToken = async () => {
-      try {
-        const response = await fetch('https://backend-klm7.onrender.com/api/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({token: token }),
-        });
-
-        if (response.ok) {
-          setLoading(false);
-        } else {
-          router.replace('/');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
     if (!token) {
-      router.replace('/');
-    } else {
-      checkToken();
-    }
-  }, [token, router]);
-  
-   const handleAddSelectedStocks = async () => {
-    try {
-      const response = await fetch('https://backend-klm7.onrender.com/api/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ stocks: selectedStocks }),
-      });
-
-      if (response.ok) {
-        toast.success('Stocks added successfully');
-        retry=0;
-      } else if (response.status === 401 && retry<2) {
-        retry++;
-        await handleTokenRefresh(); // Trigger token refresh
-        await handleAddSelectedStocks(); // Retry original request
-      } else {
-        const data = await response.json();
-        toast.error(data.message);
-        retry=0;
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      retry=0;
-    }
-  };
-
-  const handleTokenRefresh = async () => {
-             const refreshToken = getCookie('refresh');   
- try {
-      const response = await fetch('https://backend-klm7.onrender.com/api/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-     
-        setCookie('token', data.access_token); // Update token in cookies
-      } else {
-        // Handle refresh token failure (e.g., redirect to login page)
-        router.replace("/");
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      // Handle refresh token failure (e.g., redirect to login page)
       router.replace("/");
+    } else {
+      setLoading(false); 
     }
-  };
-
-
- const [selectedStocks, setSelectedStocks] = useState<{ [key: string]: Stock }>({});
+  }, [token]);
+    const [selectedStocks, setSelectedStocks] = useState<{ [key: string]: Stock }>({});
 
     const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
       if (event.target.checked) {
@@ -168,8 +94,32 @@ const StocksTable= () => {
         }
       });
     };
-    
-      return (
+
+  const handleAddSelectedStocks = async () => {
+    try {
+      
+
+      const response = await fetch('http://localhost:8000/api/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: getCookie('token'),stocks:selectedStocks }),
+      });
+
+     
+      if (response.ok) {
+        toast.success('Stocks added successfully');
+      } else {
+        const data=await response.json();
+        const msg=response.message;
+        toast.error(msg);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  return (
    
     (loading ?  (<div className="loader-container">
     <div className="loader"></div>
@@ -222,6 +172,6 @@ const StocksTable= () => {
     </div>
     </>)
     )
-    };
+};
 
 export default StocksTable;
