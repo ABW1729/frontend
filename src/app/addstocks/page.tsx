@@ -124,7 +124,7 @@ const StocksTable= () => {
 
       if (response.ok) {
         const data = await response.json();
-        setToken(data.access_token); // Update access token
+     
         setCookie('token', data.access_token); // Update token in cookies
       } else {
         // Handle refresh token failure (e.g., redirect to login page)
