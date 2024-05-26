@@ -57,7 +57,7 @@ const StocksTable= () => {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const response = await fetch('http://34.227.101.23:8000/api/check', {
+        const response = await fetch('https://backend-klm7.onrender.com/api/check', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const StocksTable= () => {
   
    const handleAddSelectedStocks = async () => {
     try {
-      const response = await fetch('http://34.227.101.23:8000/api/add', {
+      const response = await fetch('https://backend-klm7.onrender.com/api/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ const StocksTable= () => {
   const handleTokenRefresh = async () => {
              const refreshToken = getCookie('refresh');   
  try {
-      const response = await fetch('http://34.227.101.23:8000/api/refresh', {
+      const response = await fetch('https://backend-klm7.onrender.com/api/refresh', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
