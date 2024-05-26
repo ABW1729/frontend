@@ -28,7 +28,7 @@ const settings = [ 'Logout'];
 const handleLogout = async () => {
   try {
     // Call the logout API
-    const res = await fetch("http://34.227.101.23:8000/api/logout", {
+    const res = await fetch("https://backend-klm7.onrender.com/api/logout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
