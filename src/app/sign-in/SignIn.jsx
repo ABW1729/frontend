@@ -7,6 +7,7 @@ import { setCookie,getCookie } from "cookies-next";
 import { useRouter } from 'next/navigation'
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { redirect } from "@/lib/auth";
 import config from "@/lib/utils"
 export default function Login() {
     const router = useRouter()
@@ -49,7 +50,7 @@ export default function Login() {
     return;
   }
 
-  const res = await fetch("https://backend-klm7.onrender.com/api/login", {
+  const res = await fetch("http://localhost:8000/api/login", {
     method: "POST",
     body: JSON.stringify(formValues),
     headers: {
@@ -60,12 +61,13 @@ export default function Login() {
       if (res.status==200) {
         toast.success("Succesfully signed-in");
         const data = await res.json();
-        setCookie('access', data.access, { expires: new Date(Date.now() + data.access_expiry * 1000) });
-        setCookie('refresh', data.refresh);
+        setCookie('token', data.token, { expires: new Date(data.expiry_timestamp) });
         setIsLoggedIn(true);
         window.location.href='/watchlist';
       } else {
-        toast.error("Invalid email or password");
+          const data = await res.json();
+          const msg=data.message;
+        toast.error(msg);
       }
     } catch (error) {
       console.log(error);
@@ -80,47 +82,44 @@ export default function Login() {
     email: "",
     password: "",
   });
-  
+  const onSignUp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
+    try {
 
-
-const onSignUp = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
     if (!formvalues.name || !formvalues.email || !formvalues.password) {
-      toast.error("Please provide all details");
-      setLoading(false);
-      return;
-    }
-
-    const res = await fetch("https://backend-klm7.onrender.com/api/register", {
-      method: "POST",
-      body: JSON.stringify(formvalues),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (res.status==201) {
-      // User signed up successfully
-      const data = await res.json();
-      toast.success(data.message);
-      window.location.href="/";
-    } else {
-      // Error occurred, parse the error response
-      const errorData = await res.json();
-      const errorMessage = errorData.message;
-      toast.error("Please check credentials");
-    }
-  } catch (error) {
-    console.error(error);
-  } finally {
+    toast.error("Please provide all details");
     setLoading(false);
+    return;
   }
-};
-     
+      const res = await fetch("http://localhost:8000/api/register", {
+        method: "POST",
+        body: JSON.stringify(formvalues),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+
+      if (res.status != 200 || res.status == 500) {
+        const error = await res.json();
+        const message = error.message;
+         toast.error(message)
+      }
+
+      const error = await res.json();
+      const message = error.message;
+      toast.success(message);
+      setTimeout(() => {
+        signIn(undefined, { callbackUrl: "/" });
+      }, 2000);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues({ ...formValues, [name]: value });
@@ -186,6 +185,9 @@ const onSignUp = async (e) => {
                   onChange={handleChange}
                   placeholder="Password"
                 />
+              </div>
+              <div className="pass-link">
+                <a href="/forgot-password">Forgot password?</a>
               </div>
               <div className="field btn">
                 <div className="btn-layer"></div>
