@@ -49,7 +49,7 @@ export default function Login() {
     return;
   }
 
-  const res = await fetch("http://34.227.101.23:8000/api/login", {
+  const res = await fetch("https://backend-klm7.onrender.com/api/login", {
     method: "POST",
     body: JSON.stringify(formValues),
     headers: {
@@ -95,7 +95,7 @@ const onSignUp = async (e) => {
       return;
     }
 
-    const res = await fetch("http://34.227.101.23:8000/api/register", {
+    const res = await fetch("https://backend-klm7.onrender.com/api/register", {
       method: "POST",
       body: JSON.stringify(formvalues),
       headers: {
