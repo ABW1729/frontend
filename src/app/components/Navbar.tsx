@@ -23,28 +23,25 @@ const pages = [
   { id:2 ,name: 'Add Stocks', link: '/addstocks' },
   
 ];
-const token=getCookie('access');
 const settings = [ 'Logout'];
 const handleLogout = async () => {
   try {
     // Call the logout API
-    const res = await fetch("https://backend-klm7.onrender.com/api/logout", {
+    const res = await fetch("http://localhost:8000/api/logout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-         'Authorization': `Bearer ${token}`
       },
      
-      body: JSON.stringify({ refresh: getCookie('refresh') }),
+      body: JSON.stringify({ token: getCookie('token') }),
     });
 
    
     if (res.status === 200) {
-       deleteCookie('refresh');
-       deleteCookie('access');    
+       deleteCookie('token'); 
       window.location.href="/";
     } else {
-      toast.error('Logout failed');
+      toast.error('Clear Cookies and Relogin');
     }
   } catch (error) {
     console.error('Error:', error);
@@ -52,10 +49,15 @@ const handleLogout = async () => {
 };
 
 function Navbar() {
-  
+   const router = useRouter();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
-   
+    const token = getCookie('token');
+      useEffect(() => {
+     if (!token) {
+    router.replace("/");
+  }
+    }, [token,router]);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
